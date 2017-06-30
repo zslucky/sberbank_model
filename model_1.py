@@ -9,7 +9,13 @@ import xgboost as xgb
 #load files
 train = pd.read_csv('./train.csv', parse_dates=['timestamp'])
 test = pd.read_csv('./test.csv', parse_dates=['timestamp'])
+macro = pd.read_csv('./macro.csv', parse_dates=['timestamp'])
 id_test = test.id
+
+# train.loc[train['full_sq'] > 1500, 'full_sq'] = 1500
+# train.loc[train['life_sq'] > 1250, 'life_sq'] = 1250
+# train.loc[train['num_room'] > 15, 'num_room'] = 15
+# train.loc[train['kitch_sq'] > 350, 'kitch_sq'] = 350
 
 #clean data
 bad_index = train[train.life_sq > train.full_sq].index
@@ -216,9 +222,11 @@ train['price_doc'] = train['price_doc'] * train['average_q_price']
 '''
   Add mult for train price to justiy test price
 '''
-mult = 1.054880504
-train['price_doc'] = train['price_doc'] * mult
+# mult = 1.054880504
+train['price_doc'] = train['price_doc']
 y_train = train["price_doc"]
+x_train_timestamp = train['timestamp']
+x_test_timestamp = test['timestamp']
 
 '''
   Run model
@@ -239,11 +247,27 @@ for c in x_all.columns:
 x_train = x_all[:num_train]
 x_test = x_all[num_train:]
 
+print(type(x_train))
+print(type(x_test))
+print('before merged, x_train shape = ', x_train.shape)
+x_train['timestamp'] = x_train_timestamp
+x_train = x_train.join(macro, on='timestamp', rsuffix='_macro')
+print('after merged, x_train shape = ', x_train.shape)
+print('before merged, x_test shape = ', x_test.shape)
+x_test['timestamp'] = x_test_timestamp
+x_test = x_test.join(macro, on='timestamp', rsuffix='_macro')
+print('after merged, x_test shape = ', x_test.shape)
+
+x_train = x_train.drop(["timestamp", "timestamp_macro", "child_on_acc_pre_school", "modern_education_share", "old_education_build_share"], axis=1)
+x_test = x_test.drop(["timestamp", "timestamp_macro", "child_on_acc_pre_school", "modern_education_share", "old_education_build_share"], axis=1)
+
+print(type(x_train))
+print(type(x_test))
 
 xgb_params = {
     'eta': 0.05,
-    'max_depth': 6,
-    'subsample': 0.6,
+    'max_depth': 5,
+    'subsample': 0.8,
     'colsample_bytree': 1,
     'objective': 'reg:linear',
     'eval_metric': 'rmse',

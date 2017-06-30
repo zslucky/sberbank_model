@@ -116,7 +116,11 @@ xgb_params = {
 dtrain = xgb.DMatrix(X_train, y_train, feature_names=df_columns)
 dtest = xgb.DMatrix(X_test, feature_names=df_columns)
 
-num_boost_rounds = 420  # From Bruno's original CV, I think
+cv_output = xgb.cv(xgb_params, dtrain, num_boost_round=1000, early_stopping_rounds=20, verbose_eval=5, show_stdv=False)
+print('best num_boost_rounds = ', len(cv_output))
+num_boost_rounds = len(cv_output)
+
+# num_boost_rounds = 420  # From Bruno's original CV, I think
 model = xgb.train(dict(xgb_params, silent=0), dtrain, num_boost_round=num_boost_rounds)
 
 y_pred = model.predict(dtest)
