@@ -3,4 +3,4 @@ kaggle competition - Sberbank price prediction
 
 My first competition.
 
-rank: 243rd / 3462, bronze medal.
+rank: 197rd / 3270, bronze medal.
